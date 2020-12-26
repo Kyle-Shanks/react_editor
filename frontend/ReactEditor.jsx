@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import Editor from 'frontend/components/Editor';
+import App from 'frontend/components/App';
 
 document.addEventListener('DOMContentLoaded', () => {
-    ReactDOM.render(<Editor />, document.getElementById('root'));
+    ReactDOM.render(<App />, document.getElementById('root'));
 });
