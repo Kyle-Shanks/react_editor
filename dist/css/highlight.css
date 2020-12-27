@@ -147,7 +147,7 @@ code[class*="language-"] *::selection {
 }
 
 .token.important {
-	color: #569cd6;
+	color: #5ec4ff;
 }
 
 .token.italic {
@@ -160,7 +160,7 @@ code[class*="language-"] *::selection {
 
 .token.class-name,
 .token.maybe-class-name {
-	color: #4ec9b0;
+	color: #70e1e8;
 }
 
 .token.console {
@@ -172,7 +172,7 @@ code[class*="language-"] *::selection {
 }
 
 .token.interpolation {
-	color: #9cdcfe;
+	color: #b7c5d3;
 }
 
 .token.punctuation.interpolation-punctuation {
