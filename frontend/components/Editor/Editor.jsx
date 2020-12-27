@@ -1,7 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import Prism from "prismjs";
-import { ComponentContainer, TextArea, CodeDisplay } from './styles.js';
+import {
+    ComponentContainer,
+    EditorContainer,
+    TextArea,
+    CodeDisplay,
+    LanguageDisplay,
+} from './styles.js';
 
 /* TODO: Quality of life things
     - On keep indentation of the current line when adding a new line
@@ -13,9 +19,8 @@ import { ComponentContainer, TextArea, CodeDisplay } from './styles.js';
 
 const TAB = '    ';
 
-const Editor = ({ className, initialContent, language }) => {
+const Editor = ({ className, content, language, updateContent }) => {
     const BASE_CLASS_NAME = 'Editor';
-    const [content, setContent] = useState(initialContent);
     const [editorHeight, setEditorHeight] = useState(320);
     const outputRef = useRef();
 
@@ -54,16 +59,16 @@ const Editor = ({ className, initialContent, language }) => {
                     i === selectRange[0] ? startShift = -4 : endShift -= 4;
                 }
             }
-            setContent(lines.join("\n"));
+            updateContent(lines.join("\n"));
         } else if (start !== end) {
             const selectRange = getSelectionLines(start, end);
             for (let i = selectRange[0]; i < selectRange[1] + 1; i++) {
                 lines[i] = `${TAB}${lines[i]}`;
                 if (i !== selectRange[0]) endShift += 4;
             }
-            setContent(lines.join("\n"));
+            updateContent(lines.join("\n"));
         } else {
-            setContent(`${content.substring(0, end)}${TAB}${content.substring(end, content.length)}`);
+            updateContent(`${content.substring(0, end)}${TAB}${content.substring(end, content.length)}`);
         }
 
         // Janky way to move selection start end end to the correct position after the update
@@ -74,7 +79,9 @@ const Editor = ({ className, initialContent, language }) => {
     };
 
     const handleKeyDown = (e) => {
-        if (e.key === 'Tab') handleTabActions(e);
+        switch (e.key) {
+            case 'Tab': handleTabActions(e); break;
+        }
     };
 
     useEffect(() => {
@@ -86,33 +93,35 @@ const Editor = ({ className, initialContent, language }) => {
 
     return (
         <ComponentContainer className={`${BASE_CLASS_NAME} ${className}`.trim()}>
-            <TextArea
-                className={`${BASE_CLASS_NAME}__Input`}
-                style={{ height: editorHeight }}
-                value={content}
-                onChange={e => setContent(e.target.value)}
-                onKeyDown={handleKeyDown}
-                spellCheck={false}
-            />
-            <CodeDisplay className={`${BASE_CLASS_NAME}__Output`} ref={outputRef}>
-                <code className={`language-${language}`}>{content}</code>
-                {/* Added so that an empty line at the end will update height */}
-                <br/>
-            </CodeDisplay>
+            <EditorContainer>
+                <TextArea
+                    className={`${BASE_CLASS_NAME}__Input`}
+                    style={{ height: editorHeight }}
+                    value={content}
+                    onChange={e => updateContent(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    spellCheck={false}
+                />
+                <CodeDisplay className={`${BASE_CLASS_NAME}__Output`} ref={outputRef}>
+                    <code className={`language-${language}`}>{content}</code>
+                    {/* Added so that an empty line at the end will update height */}
+                    <br/>
+                </CodeDisplay>
+            </EditorContainer>
+            <LanguageDisplay>{language}</LanguageDisplay>
         </ComponentContainer>
     );
 };
 
 Editor.propTypes = {
     className: PropTypes.string,
-    initialContent: PropTypes.string,
-    // TODO: Make language array for this
+    content: PropTypes.string.isRequired,
     language: PropTypes.string.isRequired,
+    updateContent: PropTypes.func.isRequired,
 };
 
 Editor.defaultProps = {
     className: '',
-    initialContent: '',
 };
 
 export default Editor;
