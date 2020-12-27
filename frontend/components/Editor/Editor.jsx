@@ -1,10 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import Prism from "prismjs";
+import { ComponentContainer, TextArea, CodeDisplay } from './styles.js';
 
 const Editor = ({ className, initialContent, language }) => {
     const BASE_CLASS_NAME = 'Editor';
     const [content, setContent] = useState(initialContent);
+    const [editorHeight, setEditorHeight] = useState(320);
+    const textareaRef = useRef();
+    const outputRef = useRef();
 
     const handleKeyDown = (e) => {
         // Handle tabs
@@ -23,20 +27,29 @@ const Editor = ({ className, initialContent, language }) => {
         }
     };
 
-    useEffect(Prism.highlightAll, [language, content]);
+    useEffect(() => {
+        Prism.highlightAll();
+        if (outputRef.current && outputRef.current.clientHeight !== editorHeight) {
+            setEditorHeight(outputRef.current.clientHeight);
+        }
+    }, [language, content]);
 
     return (
-        <div className={`${BASE_CLASS_NAME} ${className}`.trim()}>
-            <textarea
+        <ComponentContainer className={`${BASE_CLASS_NAME} ${className}`.trim()}>
+            <TextArea
                 className={`${BASE_CLASS_NAME}__Input`}
+                ref={textareaRef}
                 value={content}
                 onChange={e => setContent(e.target.value)}
                 onKeyDown={handleKeyDown}
+                style={{height: editorHeight}}
+                spellcheck={false}
             />
-            <pre className={`${BASE_CLASS_NAME}__Output`}>
+            <CodeDisplay className={`${BASE_CLASS_NAME}__Output`} ref={outputRef}>
                 <code className={`language-${language}`}>{content}</code>
-            </pre>
-        </div>
+                <br/>
+            </CodeDisplay>
+        </ComponentContainer>
     );
 };
 
