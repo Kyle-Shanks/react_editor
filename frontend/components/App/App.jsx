@@ -23,26 +23,26 @@ const updateIframe = (iframe, htmlContent, cssContent, jsContent) => {
     setTimeout(() => {
         const doc = iframe.contentDocument;
         const pageContent = `
-        <!DOCTYPE html>
-        <html>
-            <head>
-                <title>Neat Title</title>
-                <style>${cssContent}</style>
-            </head>
-            <body>
-                ${htmlContent}
-                <script>${jsContent}</script>
-            </body>
-        </html>
-    `;
+            <!DOCTYPE html>
+            <html>
+                <head>
+                    <title>Neat Title</title>
+                    <style>${cssContent}</style>
+                </head>
+                <body>
+                    ${htmlContent}
+                    <script>${jsContent}</script>
+                </body>
+            </html>
+        `;
 
-        doc.open('text/htmlreplace');
+        doc.open();
         doc.write(pageContent);
         doc.close();
     }, 100);
 };
 
-const debouncedIframeUpdate = debouncedIframeUpdate || debounce(updateIframe, 2000);
+const debouncedIframeUpdate = debounce(updateIframe, 2000);
 
 const App = ({ className }) => {
     const BASE_CLASS_NAME = 'App';

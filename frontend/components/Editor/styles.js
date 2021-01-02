@@ -68,7 +68,9 @@ export const CodeDisplay = styled.pre`
 export const LanguageDisplay = styled.div`
     z-index: 100;
     position: absolute;
-    right: 1rem;
-    bottom: 1rem;
+    right: 0;
+    bottom: 0;
+    padding: 1rem;
     color: rgba(200,235,255,0.35);
+    pointer-events: none;
 `;

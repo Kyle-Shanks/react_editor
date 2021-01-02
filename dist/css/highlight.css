@@ -140,6 +140,7 @@ code[class*="language-"] *::selection {
 .token.function,
 .token.function .token.maybe-class-name {
 	color: #70e1e8;
+	font-style: italic;
 }
 
 .token.regex {

@@ -9,13 +9,15 @@ import {
     LanguageDisplay,
 } from './styles.js';
 
+// TODO: Specialized key handlers for each language
+
 /* TODO: Quality of life things
-    - On keep indentation of the current line when adding a new line
     - On backspace, if the selectionStart and selectionEnd are the same and
       the 4 chars before are a tab, delete the tab
-    - On [, {, (, ", ', or `, automatically add the other half
     - Add a system for undos and redos, they are p broken right now
 */
+
+// TODO: Need a function to grab the content on the line before and after the caret.
 
 const TAB = '    ';
 
@@ -33,7 +35,7 @@ const Editor = ({ className, content, language, updateContent }) => {
         let total = 0;
 
         for (let i = 0; i < lines.length; i++) {
-            total += lines[i].length + 1;
+            total += lines[i].length + 1; // +1 for new line char
             if (selectionRange[0] === null && total >= start) selectionRange[0] = i;
             if (selectionRange[1] === null && total >= end) selectionRange[1] = i;
         }
@@ -78,9 +80,67 @@ const Editor = ({ className, content, language, updateContent }) => {
         }, 0);
     };
 
+    const handleNewLine = (e) => {
+        e.preventDefault();
+        const ref = e.currentTarget;
+        const start = ref.selectionStart;
+        const end = ref.selectionEnd;
+        const lines = getLines();
+        const selectRange = getSelectionLines(start, end);
+        const indentation = lines[selectRange[0]].match(/^\s+/)?.[0] || '';
+
+        updateContent(`${content.substring(0, start)}\n${indentation}${content.substring(end, content.length)}`);
+
+        // Janky way to move selection start end end to the correct position after the update
+        setTimeout(() => {
+            ref.selectionStart = start + indentation.length + 1;
+            ref.selectionEnd = start + indentation.length + 1;
+        }, 0);
+    };
+
+    const handlePairChar = (e) => {
+        e.preventDefault();
+        const ref = e.currentTarget;
+        const start = ref.selectionStart;
+        const end = ref.selectionEnd;
+
+        const charMap = {
+            '(': ')',
+            '[': ']',
+            '{': '}',
+            '\'': '\'',
+            '"': '"',
+            '`': '`',
+        };
+
+        if (start === end) {
+            // Add the pair chars and increment start and end positions
+            updateContent(`${content.substring(0, end)}${e.key}${charMap[e.key]}${content.substring(end, content.length)}`);
+        } else {
+            // Surround selection in pair chars and increment start and end positions
+            updateContent(
+                `${content.substring(0, start)}${e.key}`
+                + `${content.substring(start, end)}`
+                + `${charMap[e.key]}${content.substring(end, content.length)}`
+            );
+        }
+
+        // Janky way to move selection start end end to the correct position after the update
+        setTimeout(() => {
+            ref.selectionStart = start + 1;
+            ref.selectionEnd = end + 1;
+        }, 0);
+    };
+
     const handleKeyDown = (e) => {
-        switch (e.key) {
-            case 'Tab': handleTabActions(e); break;
+        const pairChars = ['(', '[', '{', '\'', '"', '`'];
+
+        if (e.key === 'Tab') {
+            handleTabActions(e);
+        } else if (e.key === 'Enter') {
+            handleNewLine(e);
+        } else if (pairChars.includes(e.key)) {
+            handlePairChar(e);
         }
     };
 
