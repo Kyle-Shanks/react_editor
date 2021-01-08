@@ -10,6 +10,7 @@ import {
 } from './styles.js';
 
 // TODO: Specialized key handlers for each language
+// - This can be used for things like tag autocomplete in HTML
 
 /* TODO: Quality of life things
     - On backspace, if the selectionStart and selectionEnd are the same and
@@ -20,10 +21,11 @@ import {
 // TODO: Need a function to grab the content on the line before and after the caret.
 
 const TAB = '    ';
+const INITIAL_EDITOR_HEIGHT = 320; // 20rem
 
 const Editor = ({ className, content, language, updateContent }) => {
     const BASE_CLASS_NAME = 'Editor';
-    const [editorHeight, setEditorHeight] = useState(320);
+    const [editorHeight, setEditorHeight] = useState(INITIAL_EDITOR_HEIGHT);
     const outputRef = useRef();
 
     const getLines = () => content.split("\n");
@@ -43,7 +45,7 @@ const Editor = ({ className, content, language, updateContent }) => {
         return selectionRange;
     };
 
-    const handleTabActions = (e) => {
+    const handleTabAction = (e) => {
         e.preventDefault();
         const ref = e.currentTarget;
         const start = ref.selectionStart;
@@ -136,7 +138,7 @@ const Editor = ({ className, content, language, updateContent }) => {
         const pairChars = ['(', '[', '{', '\'', '"', '`'];
 
         if (e.key === 'Tab') {
-            handleTabActions(e);
+            handleTabAction(e);
         } else if (e.key === 'Enter') {
             handleNewLine(e);
         } else if (pairChars.includes(e.key)) {
@@ -164,7 +166,7 @@ const Editor = ({ className, content, language, updateContent }) => {
                 />
                 <CodeDisplay className={`${BASE_CLASS_NAME}__Output`} ref={outputRef}>
                     <code className={`language-${language}`}>{content}</code>
-                    {/* Added so that an empty line at the end will update height */}
+                    {/* Added to update height when an empty line is added at the end */}
                     <br/>
                 </CodeDisplay>
             </EditorContainer>

@@ -5,8 +5,5 @@
 
 body {
     transition: none;
-}
-
-iframe {
-    border: 1px solid black;
+    background-color: #41505e;
 }

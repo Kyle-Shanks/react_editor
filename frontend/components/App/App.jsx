@@ -1,19 +1,62 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import Editor from 'frontend/components/Editor';
+import { debounce } from 'frontend/util';
+import { ComponentContainer, FlexContainer, IFrame } from './styles';
 
-const debounce = (callback, wait) => {
-    let timeout;
-    return (...args) => {
-        const later = () => {
-            clearTimeout(timeout);
-            callback(...args);
-        };
+const IFRAME_UPDATE_DELAY_TIME = 2000; // ms
 
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-};
+const cssResetStyles = `
+    html, body, div, span, applet, object, iframe,
+    h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+    a, abbr, acronym, address, big, cite, code,
+    del, dfn, em, img, ins, kbd, q, s, samp,
+    small, strike, strong, sub, sup, tt, var,
+    b, u, i, center,
+    dl, dt, dd, ol, ul, li,
+    fieldset, form, label, legend,
+    table, caption, tbody, tfoot, thead, tr, th, td,
+    article, aside, canvas, details, embed,
+    figure, figcaption, footer, header, hgroup,
+    menu, nav, output, ruby, section, summary,
+    time, mark, audio, video {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        font-size: 100%;
+        font: inherit;
+        vertical-align: baseline;
+    }
+    /* HTML5 display-role reset for older browsers */
+    article, aside, details, figcaption, figure,
+    footer, header, hgroup, menu, nav, section {
+        display: block;
+    }
+    body {
+        line-height: 1;
+    }
+    ol, ul {
+        list-style: none;
+    }
+    blockquote, q {
+        quotes: none;
+    }
+    blockquote:before, blockquote:after,
+    q:before, q:after {
+        content: '';
+        content: none;
+    }
+    table {
+        border-collapse: collapse;
+        border-spacing: 0;
+    }
+`;
+
+const iframeStyles = `
+    html {
+        width: 50% !important; // 50% of outer window size
+    }
+`;
 
 const updateIframe = (iframe, htmlContent, cssContent, jsContent) => {
     // Reload iframe bc javascript variables
@@ -27,7 +70,11 @@ const updateIframe = (iframe, htmlContent, cssContent, jsContent) => {
             <html>
                 <head>
                     <title>Neat Title</title>
-                    <style>${cssContent}</style>
+                    <style>
+                        ${iframeStyles}
+                        ${cssResetStyles}
+                        ${cssContent}
+                    </style>
                 </head>
                 <body>
                     ${htmlContent}
@@ -42,25 +89,31 @@ const updateIframe = (iframe, htmlContent, cssContent, jsContent) => {
     }, 100);
 };
 
-const debouncedIframeUpdate = debounce(updateIframe, 2000);
+const debouncedIframeUpdate = debounce(updateIframe, IFRAME_UPDATE_DELAY_TIME);
 
 const App = ({ className }) => {
     const BASE_CLASS_NAME = 'App';
     const [htmlContent, setHtmlContent] = useState('<!-- HTML here -->');
     const [cssContent, setCssContent] = useState('/* CSS here */');
     const [jsContent, setJsContent] = useState('// JS here');
-    const iframe = document.getElementById('iframe');
+    const iframeRef = useRef();
 
-    useEffect(() => {
-        debouncedIframeUpdate(iframe, htmlContent, cssContent, jsContent);
-    }, [htmlContent, cssContent, jsContent]);
+    useEffect(
+        () => { debouncedIframeUpdate(iframeRef.current, htmlContent, cssContent, jsContent); },
+        [htmlContent, cssContent, jsContent]
+    );
 
     return (
-        <div className={`${BASE_CLASS_NAME} ${className}`.trim()}>
-            <Editor content={htmlContent} language={'html'} updateContent={setHtmlContent} />
-            <Editor content={cssContent} language={'css'} updateContent={setCssContent} />
-            <Editor content={jsContent} language={'javascript'} updateContent={setJsContent} />
-        </div>
+        <ComponentContainer className={`${BASE_CLASS_NAME} ${className}`.trim()}>
+            <FlexContainer>
+                <Editor content={htmlContent} language={'html'} updateContent={setHtmlContent} />
+                <Editor content={cssContent} language={'css'} updateContent={setCssContent} />
+                <Editor content={jsContent} language={'javascript'} updateContent={setJsContent} />
+            </FlexContainer>
+            <FlexContainer>
+                <IFrame id="iframe" width="100px" height="100%" ref={iframeRef} />
+            </FlexContainer>
+        </ComponentContainer>
     );
 };
 

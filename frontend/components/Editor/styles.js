@@ -10,7 +10,7 @@ export const ComponentContainer = styled.div`
     background: #1c252c;
     font-size: 13px;
     font-family: Menlo, Monaco, Consolas, "Andale Mono", "Ubuntu Mono", "Courier New", monospace;
-    border-radius: 0.5rem;
+    border-radius: 0.125rem;
     box-shadow: 0 2px 10px 1px rgba(0,0,0,0.35);
 `;
 
