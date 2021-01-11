@@ -29,6 +29,7 @@ const editorStyles = `
     overflow-wrap: break-word;
     line-height: 1.5;
     overflow: hidden;
+    tab-size: 4;
 `;
 
 export const TextArea = styled.textarea`
