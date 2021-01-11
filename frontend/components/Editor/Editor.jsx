@@ -9,16 +9,17 @@ import {
     LanguageDisplay,
 } from './styles.js';
 
+// TODO: Need to clean up the code a bit and add constants and things
+
 // TODO: Specialized key handlers for each language
 // - This can be used for things like tag autocomplete in HTML
 
 /* TODO: Quality of life things
-    - On backspace, if the selectionStart and selectionEnd are the same and
-      the 4 chars before are a tab, delete the tab
+    - On backspace, if the selectionStart and selectionEnd are the same, delete to tabs
     - Add a system for undos and redos, they are p broken right now
+        - Should have a debounced function for normal character additions
+        - Should add to revisions array on any tab or enter key press (or other big actions i guess)
 */
-
-// TODO: Need a function to grab the content on the line before and after the caret.
 
 const TAB = '    ';
 const INITIAL_EDITOR_HEIGHT = 320; // 20rem
@@ -37,13 +38,22 @@ const Editor = ({ className, content, language, updateContent }) => {
         let total = 0;
 
         for (let i = 0; i < lines.length; i++) {
-            total += lines[i].length + 1; // +1 for new line char
+            total += lines[i].length;
             if (selectionRange[0] === null && total >= start) selectionRange[0] = i;
             if (selectionRange[1] === null && total >= end) selectionRange[1] = i;
+            total++; // for line break char
         }
 
         return selectionRange;
     };
+
+    // Returns selection text, text before and after selection, and line numbers
+    const getSelectionInfo = (start, end) => ({
+        range: getSelectionLines(start, end),
+        textBefore: content.slice(0, start),
+        text: content.slice(start, end),
+        textAfter: content.slice(end),
+    });
 
     const handleTabAction = (e) => {
         e.preventDefault();
@@ -72,7 +82,7 @@ const Editor = ({ className, content, language, updateContent }) => {
             }
             updateContent(lines.join("\n"));
         } else {
-            updateContent(`${content.substring(0, end)}${TAB}${content.substring(end, content.length)}`);
+            updateContent(`${content.substring(0, end)}${TAB}${content.substring(end)}`);
         }
 
         // Janky way to move selection start end end to the correct position after the update
@@ -87,26 +97,29 @@ const Editor = ({ className, content, language, updateContent }) => {
         const ref = e.currentTarget;
         const start = ref.selectionStart;
         const end = ref.selectionEnd;
+        const select = getSelectionInfo(start, end);
         const lines = getLines();
-        const selectRange = getSelectionLines(start, end);
-        const indentation = lines[selectRange[0]].match(/^\s+/)?.[0] || '';
+        const indentation = lines[select.range[0]].match(/^\s+/)?.[0] || '';
+        const willIndent = ['{', '[', '(', '`'].includes(select.textBefore.slice(-1));
 
-        updateContent(`${content.substring(0, start)}\n${indentation}${content.substring(end, content.length)}`);
+        updateContent(
+            `${select.textBefore}\n${indentation}${willIndent ? `${TAB}\n${indentation}` : ''}${select.textAfter}`
+        );
 
         // Janky way to move selection start end end to the correct position after the update
         setTimeout(() => {
-            ref.selectionStart = start + indentation.length + 1;
-            ref.selectionEnd = start + indentation.length + 1;
+            ref.selectionStart = start + indentation.length + 1 + (willIndent ? TAB.length : 0);
+            ref.selectionEnd = start + indentation.length + 1 + (willIndent ? TAB.length : 0);
         }, 0);
     };
 
     const handlePairChar = (e) => {
-        e.preventDefault();
         const ref = e.currentTarget;
         const start = ref.selectionStart;
         const end = ref.selectionEnd;
-
-        const charMap = {
+        const select = getSelectionInfo(start, end);
+        const nextChar = select.textAfter[0];
+        const pairMap = {
             '(': ')',
             '[': ']',
             '{': '}',
@@ -115,17 +128,30 @@ const Editor = ({ className, content, language, updateContent }) => {
             '`': '`',
         };
 
-        if (start === end) {
-            // Add the pair chars and increment start and end positions
-            updateContent(`${content.substring(0, end)}${e.key}${charMap[e.key]}${content.substring(end, content.length)}`);
+        // If opening character
+        if (Object.keys(pairMap).includes(e.key)) {
+            if (start !== end) {
+                // Surround selection in pair chars
+                updateContent(
+                    `${select.textBefore}${e.key}`
+                    + `${select.text}`
+                    + `${pairMap[e.key]}${select.textAfter}`
+                );
+            } else if (e.key !== nextChar) {
+                // Add the pair chars
+                updateContent(`${select.textBefore}${e.key}${pairMap[e.key]}${select.textAfter}`);
+            }
         } else {
-            // Surround selection in pair chars and increment start and end positions
-            updateContent(
-                `${content.substring(0, start)}${e.key}`
-                + `${content.substring(start, end)}`
-                + `${charMap[e.key]}${content.substring(end, content.length)}`
-            );
+            // Default functionality to replace selection with character
+            if (start !== end) return;
+
+            if (e.key !== nextChar) {
+                // Add closing character
+                updateContent(`${select.textBefore}${e.key}${select.textAfter}`);
+            }
         }
+
+        e.preventDefault();
 
         // Janky way to move selection start end end to the correct position after the update
         setTimeout(() => {
@@ -135,7 +161,7 @@ const Editor = ({ className, content, language, updateContent }) => {
     };
 
     const handleKeyDown = (e) => {
-        const pairChars = ['(', '[', '{', '\'', '"', '`'];
+        const pairChars = ['(', ')', '[', ']', '{', '}', '\'', '"', '`'];
 
         if (e.key === 'Tab') {
             handleTabAction(e);

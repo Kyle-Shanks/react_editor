@@ -54,6 +54,7 @@ const cssResetStyles = `
 
 const iframeStyles = `
     html {
+        height: 100% !important;
         width: 50% !important; // 50% of outer window size
     }
 `;
@@ -111,7 +112,7 @@ const App = ({ className }) => {
                 <Editor content={jsContent} language={'javascript'} updateContent={setJsContent} />
             </FlexContainer>
             <FlexContainer>
-                <IFrame id="iframe" width="100px" height="100%" ref={iframeRef} />
+                <IFrame id="iframe" ref={iframeRef} />
             </FlexContainer>
         </ComponentContainer>
     );

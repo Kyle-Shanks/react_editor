@@ -26,6 +26,7 @@ const editorStyles = `
     text-shadow: none;
     white-space: pre-wrap;
     word-spacing: normal;
+    overflow-wrap: break-word;
     line-height: 1.5;
     overflow: hidden;
 `;
