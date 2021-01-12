@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useLayoutEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import Prism from "prismjs";
 import {
@@ -16,6 +16,7 @@ import {
 // - Also should add new line and tab when hitting enter after open tag
 
 /* TODO: Quality of life things
+    - Need to check if the next line has indent before adding the new line when hitting enter after a pair character
     - Add a system for undos and redos, they are p broken right now
         - Should have a debounced function for normal character additions
         - Should add to revisions array on any tab or enter key press (or other big actions i guess)
@@ -173,7 +174,7 @@ const Editor = ({ className, content, language, updateContent }) => {
         }
     };
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         Prism.highlightAll();
         if (outputRef.current.clientHeight !== editorHeight) {
             setEditorHeight(outputRef.current.clientHeight);
