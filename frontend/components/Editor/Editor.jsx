@@ -20,6 +20,7 @@ import {
     - Add a system for undos and redos, they are p broken right now
         - Should have a debounced function for normal character additions
         - Should add to revisions array on any tab or enter key press (or other big actions i guess)
+    - Add hotkeys like comment line and undo and redo and things
 */
 
 const NL = '\n';
@@ -29,6 +30,7 @@ const INITIAL_EDITOR_HEIGHT = 320; // 20rem
 const Editor = ({ className, content, language, updateContent }) => {
     const BASE_CLASS_NAME = 'Editor';
     const [editorHeight, setEditorHeight] = useState(INITIAL_EDITOR_HEIGHT);
+    const textareaRef = useRef();
     const outputRef = useRef();
 
     const getLines = () => content.split(NL);
@@ -57,6 +59,14 @@ const Editor = ({ className, content, language, updateContent }) => {
         textAfter: content.slice(end),
     });
 
+    // Update the content and set the caret position for the editor
+    const handleContentUpdate = (text, start, end) => {
+        textareaRef.current.value = text;
+        textareaRef.current.selectionStart = start;
+        textareaRef.current.selectionEnd = end;
+        updateContent(text);
+    };
+
     const handleTabAction = (e) => {
         e.preventDefault();
         const ref = e.currentTarget;
@@ -75,23 +85,21 @@ const Editor = ({ className, content, language, updateContent }) => {
                     i === selectRange[0] ? startShift = -(TAB.length) : endShift -= TAB.length;
                 }
             }
-            updateContent(lines.join(NL));
+            handleContentUpdate(lines.join(NL), start + startShift, end + startShift + endShift);
         } else if (start !== end) {
             const selectRange = getSelectionLines(start, end);
             for (let i = selectRange[0]; i < selectRange[1] + 1; i++) {
                 lines[i] = `${TAB}${lines[i]}`;
                 if (i !== selectRange[0]) endShift += TAB.length;
             }
-            updateContent(lines.join(NL));
+            handleContentUpdate(lines.join(NL), start + startShift, end + startShift + endShift);
         } else {
-            updateContent(`${content.substring(0, end)}${TAB}${content.substring(end)}`);
+            handleContentUpdate(
+                `${content.substring(0, end)}${TAB}${content.substring(end)}`,
+                start + startShift,
+                end + startShift + endShift
+            );
         }
-
-        // Janky way to move selection start end end to the correct position after the update
-        setTimeout(() => {
-            ref.selectionStart = start + startShift;
-            ref.selectionEnd = end + startShift + endShift;
-        }, 0);
     };
 
     const handleNewLine = (e) => {
@@ -103,16 +111,15 @@ const Editor = ({ className, content, language, updateContent }) => {
         const lines = getLines();
         const indentation = lines[select.range[0]].match(/^\s+/)?.[0] || '';
         const willIndent = ['{', '[', '(', '`'].includes(select.textBefore.slice(-1));
+        const newCaretPosition = start + indentation.length + 1 + (willIndent ? TAB.length : 0);
 
-        updateContent(
-            `${select.textBefore}${NL}${indentation}${willIndent ? `${TAB}${NL}${indentation}` : ''}${select.textAfter}`
+        handleContentUpdate(
+            `${select.textBefore}${NL}${indentation}`
+            + `${willIndent ? `${TAB}${NL}${indentation}` : ''}`
+            + `${select.textAfter}`,
+            newCaretPosition,
+            newCaretPosition
         );
-
-        // Janky way to move selection start end end to the correct position after the update
-        setTimeout(() => {
-            ref.selectionStart = start + indentation.length + 1 + (willIndent ? TAB.length : 0);
-            ref.selectionEnd = start + indentation.length + 1 + (willIndent ? TAB.length : 0);
-        }, 0);
     };
 
     const handlePairChar = (e) => {
@@ -134,14 +141,18 @@ const Editor = ({ className, content, language, updateContent }) => {
         if (Object.keys(pairMap).includes(e.key)) {
             if (start !== end) {
                 // Surround selection in pair chars
-                updateContent(
-                    `${select.textBefore}${e.key}`
-                    + `${select.text}`
-                    + `${pairMap[e.key]}${select.textAfter}`
+                handleContentUpdate(
+                    `${select.textBefore}${e.key}${select.text}${pairMap[e.key]}${select.textAfter}`,
+                    start + 1,
+                    end + 1
                 );
             } else if (e.key !== nextChar) {
                 // Add the pair chars
-                updateContent(`${select.textBefore}${e.key}${pairMap[e.key]}${select.textAfter}`);
+                handleContentUpdate(
+                    `${select.textBefore}${e.key}${pairMap[e.key]}${select.textAfter}`,
+                    start + 1,
+                    end + 1
+                );
             }
         } else {
             // Default functionality to replace selection with character
@@ -149,17 +160,17 @@ const Editor = ({ className, content, language, updateContent }) => {
 
             if (e.key !== nextChar) {
                 // Add closing character
-                updateContent(`${select.textBefore}${e.key}${select.textAfter}`);
+                handleContentUpdate(
+                    `${select.textBefore}${e.key}${select.textAfter}`,
+                    start + 1,
+                    end + 1
+                );
+            } else {
+                handleContentUpdate(content, start + 1, end + 1);
             }
         }
 
         e.preventDefault();
-
-        // Janky way to move selection start end end to the correct position after the update
-        setTimeout(() => {
-            ref.selectionStart = start + 1;
-            ref.selectionEnd = end + 1;
-        }, 0);
     };
 
     const handleKeyDown = (e) => {
@@ -174,6 +185,8 @@ const Editor = ({ className, content, language, updateContent }) => {
         }
     };
 
+    useLayoutEffect(() => textareaRef.current.value = content, []);
+
     useLayoutEffect(() => {
         Prism.highlightAll();
         if (outputRef.current.clientHeight !== editorHeight) {
@@ -186,9 +199,9 @@ const Editor = ({ className, content, language, updateContent }) => {
             <EditorContainer>
                 <TextArea
                     className={`${BASE_CLASS_NAME}__Input`}
+                    ref={textareaRef}
                     style={{ height: editorHeight }}
-                    value={content}
-                    onChange={e => updateContent(e.target.value)}
+                    onChange={(e) => updateContent(e.target.value)}
                     onKeyDown={handleKeyDown}
                     spellCheck={false}
                 />
