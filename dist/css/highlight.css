@@ -134,13 +134,18 @@ code[class*="language-"] *::selection {
 
 .token.keyword.module,
 .token.keyword.control-flow {
-	color: #c586c0;
+	color: #5ec4ff;
+	font-style: italic;
+}
+
+.token.keyword.nil {
+	color: #e27e8d;
 }
 
 .token.function,
 .token.function .token.maybe-class-name {
 	color: #70e1e8;
-	font-style: italic;
+	/* font-style: italic; */
 }
 
 .token.regex {
@@ -165,7 +170,7 @@ code[class*="language-"] *::selection {
 }
 
 .token.console {
-	color: #9cdcfe;
+	color: #698296;
 }
 
 .token.parameter {
@@ -250,6 +255,23 @@ code[class*="language-html"] {
 
 .language-regex .token.anchor {
 	color: #dcdcaa;
+}
+
+.language-css .token.unit {
+	color: #5ec4ff;
+}
+.language-css .token.color {
+	color: #d95468;
+}
+.language-css .token.pseudo-element {
+	color: #5ec4ff;
+}
+.language-css .token.pseudo-class {
+	color: #70e1e8;
+}
+
+.language-php .token.variable {
+	color: #ebbf83;
 }
 
 /* .language-html .token.punctuation {

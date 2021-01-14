@@ -1,6 +1,8 @@
 import React, { useState, useLayoutEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
-import Prism from "prismjs";
+import Prism from 'prismjs';
+import 'prismjs/components/prism-css-extras';
+import 'prismjs/components/prism-js-extras';
 import {
     ComponentContainer,
     EditorContainer,
@@ -153,6 +155,8 @@ const Editor = ({ className, content, language, updateContent }) => {
                     start + 1,
                     end + 1
                 );
+            } else {
+                handleContentUpdate(content, start + 1, end + 1);
             }
         } else {
             // Default functionality to replace selection with character
@@ -185,7 +189,7 @@ const Editor = ({ className, content, language, updateContent }) => {
         }
     };
 
-    useLayoutEffect(() => textareaRef.current.value = content, []);
+    useLayoutEffect(() => { textareaRef.current.value = content; }, []);
 
     useLayoutEffect(() => {
         Prism.highlightAll();
