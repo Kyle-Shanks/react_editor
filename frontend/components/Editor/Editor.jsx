@@ -27,10 +27,10 @@ import {
 
 const NL = '\n';
 const TAB = '\t';
+const BASE_CLASS_NAME = 'Editor';
 const INITIAL_EDITOR_HEIGHT = 320; // 20rem
 
 const Editor = ({ className, content, language, updateContent }) => {
-    const BASE_CLASS_NAME = 'Editor';
     const [editorHeight, setEditorHeight] = useState(INITIAL_EDITOR_HEIGHT);
     const textareaRef = useRef();
     const outputRef = useRef();
@@ -61,11 +61,19 @@ const Editor = ({ className, content, language, updateContent }) => {
         textAfter: content.slice(end),
     });
 
+    const updateCaretPosition = (start, end) => {
+        if (start !== undefined) textareaRef.current.selectionStart = start;
+        if (end !== undefined) textareaRef.current.selectionEnd = end;
+    };
+
+    const updateTextareaContent = (text, start, end) => {
+        textareaRef.current.value = text;
+        updateCaretPosition(start, end);
+    };
+
     // Update the content and set the caret position for the editor
     const handleContentUpdate = (text, start, end) => {
-        textareaRef.current.value = text;
-        textareaRef.current.selectionStart = start;
-        textareaRef.current.selectionEnd = end;
+        updateTextareaContent(text, start, end);
         updateContent(text);
     };
 
@@ -156,7 +164,7 @@ const Editor = ({ className, content, language, updateContent }) => {
                     end + 1
                 );
             } else {
-                handleContentUpdate(content, start + 1, end + 1);
+                updateCaretPosition(start + 1, end + 1);
             }
         } else {
             // Default functionality to replace selection with character
@@ -170,7 +178,7 @@ const Editor = ({ className, content, language, updateContent }) => {
                     end + 1
                 );
             } else {
-                handleContentUpdate(content, start + 1, end + 1);
+                updateCaretPosition(start + 1, end + 1);
             }
         }
 
@@ -189,7 +197,7 @@ const Editor = ({ className, content, language, updateContent }) => {
         }
     };
 
-    useLayoutEffect(() => { textareaRef.current.value = content; }, []);
+    useLayoutEffect(() => { updateTextareaContent(content); }, []);
 
     useLayoutEffect(() => {
         Prism.highlightAll();
