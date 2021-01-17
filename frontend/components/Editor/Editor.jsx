@@ -12,19 +12,10 @@ import {
     LanguageDisplay,
 } from './styles.js';
 
-// TODO: Need to clean up the code a bit and add constants and things
-
-// TODO: Specialized key handlers for each language
-// - This can be used for things like tag autocomplete in HTML
-// - Also should add new line and tab when hitting enter after open tag
-
-/* TODO: Quality of life things
-    - Need to check if the next line has indent before adding the new line when hitting enter after a pair character
-    - Add a system for undos and redos, they are p broken right now
-        - Should have a debounced function for normal character additions
-        - Should add to revisions array on any tab or enter key press (or other big actions i guess)
-    - Add hotkeys like comment line and undo and redo and things
-*/
+// TODO
+// - Add an undo and redo system
+// - Can add specialized key handlers for specific languages (e.g. tag autocomplete in HTML)
+// - Need to clean up the code a bit and add constants and things
 
 const NL = '\n';
 const TAB = '\t';
@@ -142,13 +133,24 @@ const Editor = ({ className, content, language, updateContent }) => {
         const select = getSelectionInfo(start, end);
         const lines = getLines();
         const indentation = lines[select.range[0]].match(/^\s+/)?.[0] || '';
-        const willIndent = ['{', '[', '(', '`'].includes(select.textBefore.slice(-1));
+        const prevChar = select.textBefore.slice(-1);
+        const nextChar = select.textAfter[0];
+        const willIndent = ['{', '[', '(', '`'].includes(prevChar);
         const newCaretPosition = start + indentation.length + 1 + (willIndent ? TAB.length : 0);
 
+        const indentCharMap = {
+            '{': '}',
+            '[': ']',
+            '(': ')',
+            '`': '`',
+        };
+
+        const indentContent = willIndent
+            ? `${TAB}${nextChar === indentCharMap[prevChar] ? NL : ''}${indentation}`
+            : '';
+
         handleContentUpdate(
-            `${select.textBefore}${NL}${indentation}`
-            + `${willIndent ? `${TAB}${NL}${indentation}` : ''}`
-            + `${select.textAfter}`,
+            `${select.textBefore}${NL}${indentation}${indentContent}${select.textAfter}`,
             newCaretPosition,
             newCaretPosition
         );
