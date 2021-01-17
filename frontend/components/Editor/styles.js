@@ -3,10 +3,11 @@ import styled from 'styled-components';
 export const ComponentContainer = styled.div`
     display: block;
     position: relative;
-    height: 20rem;
+    height: 21rem;
     width: calc(100vw - 2rem);
     max-width: 40rem;
     margin: 1rem auto;
+    padding-bottom: 3rem; // Space on the bottom for info display
     background: #1c252c;
     font-size: 13px;
     font-family: Menlo, Monaco, Consolas, "Andale Mono", "Ubuntu Mono", "Courier New", monospace;
@@ -67,12 +68,21 @@ export const CodeDisplay = styled.pre`
     }
 `;
 
-export const LanguageDisplay = styled.div`
+const displayStyles = `
     z-index: 100;
     position: absolute;
-    right: 0;
     bottom: 0;
-    padding: 1rem;
+    padding: 1rem 2rem;
     color: rgba(200,235,255,0.35);
     pointer-events: none;
+`;
+
+export const StatsDisplay = styled.div`
+    ${displayStyles}
+    left: 0;
+`;
+
+export const LanguageDisplay = styled.div`
+    ${displayStyles}
+    right: 0;
 `;

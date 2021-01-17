@@ -8,6 +8,7 @@ import {
     EditorContainer,
     TextArea,
     CodeDisplay,
+    StatsDisplay,
     LanguageDisplay,
 } from './styles.js';
 
@@ -28,12 +29,33 @@ import {
 const NL = '\n';
 const TAB = '\t';
 const BASE_CLASS_NAME = 'Editor';
-const INITIAL_EDITOR_HEIGHT = 320; // 20rem
+// const INITIAL_EDITOR_HEIGHT = 336; // 21rem
+const INITIAL_EDITOR_HEIGHT = 288; // 21rem - 3rem for the info display on the bottom
 
 const Editor = ({ className, content, language, updateContent }) => {
     const [editorHeight, setEditorHeight] = useState(INITIAL_EDITOR_HEIGHT);
+    const [stats, setStats] = useState('');
     const textareaRef = useRef();
     const outputRef = useRef();
+
+    const updateStats = () => {
+        const { value, selectionStart, selectionEnd } = textareaRef.current;
+
+        const linesBeforeStart = value.slice(0, selectionStart).split('\n');
+        const startLine = linesBeforeStart.length - 1;
+        const startLineIdx = linesBeforeStart[linesBeforeStart.length - 1].length;
+
+        const linesBeforeEnd = value.slice(0, selectionEnd).split('\n');
+        const endLine = linesBeforeEnd.length - 1;
+        const endLineIdx = linesBeforeEnd[linesBeforeEnd.length - 1].length;
+
+        const str = `${value.split(NL).length}L ${value.length}C [${startLine}, ${startLineIdx}`
+            + (selectionStart !== selectionEnd ? ` -> ${endLine}, ${endLineIdx}]` : ']');
+
+        if (str !== stats) setStats(str);
+    };
+
+    const delayedUpdateStats = () => setTimeout(updateStats, 0);
 
     const getLines = () => content.split(NL);
 
@@ -195,9 +217,14 @@ const Editor = ({ className, content, language, updateContent }) => {
         } else if (pairChars.includes(e.key)) {
             handlePairChar(e);
         }
+
+        delayedUpdateStats();
     };
 
-    useLayoutEffect(() => { updateTextareaContent(content); }, []);
+    useLayoutEffect(() => {
+        updateTextareaContent(content, 0, 0);
+        updateStats();
+    }, []);
 
     useLayoutEffect(() => {
         Prism.highlightAll();
@@ -213,8 +240,13 @@ const Editor = ({ className, content, language, updateContent }) => {
                     className={`${BASE_CLASS_NAME}__Input`}
                     ref={textareaRef}
                     style={{ height: editorHeight }}
-                    onChange={(e) => updateContent(e.target.value)}
+                    onChange={(e) => {
+                        updateContent(e.target.value);
+                        delayedUpdateStats();
+                    }}
                     onKeyDown={handleKeyDown}
+                    onKeyUp={delayedUpdateStats}
+                    onMouseUp={delayedUpdateStats}
                     spellCheck={false}
                 />
                 <CodeDisplay className={`${BASE_CLASS_NAME}__Output`} ref={outputRef}>
@@ -223,6 +255,7 @@ const Editor = ({ className, content, language, updateContent }) => {
                     <br/>
                 </CodeDisplay>
             </EditorContainer>
+            <StatsDisplay>{stats}</StatsDisplay>
             <LanguageDisplay>{language}</LanguageDisplay>
         </ComponentContainer>
     );
