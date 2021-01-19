@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import Prism from 'prismjs';
 import 'prismjs/components/prism-css-extras';
 import 'prismjs/components/prism-js-extras';
+import 'frontend/util/prism-line-numbers';
 import {
     ComponentContainer,
     EditorContainer,
@@ -33,12 +34,12 @@ const Editor = ({ className, content, language, updateContent }) => {
         const { value, selectionStart, selectionEnd } = textareaRef.current;
 
         const linesBeforeStart = value.slice(0, selectionStart).split('\n');
-        const startLine = linesBeforeStart.length - 1;
-        const startLineIdx = linesBeforeStart[linesBeforeStart.length - 1].length;
+        const startLine = linesBeforeStart.length;
+        const startLineIdx = linesBeforeStart[linesBeforeStart.length - 1].length + 1;
 
         const linesBeforeEnd = value.slice(0, selectionEnd).split('\n');
-        const endLine = linesBeforeEnd.length - 1;
-        const endLineIdx = linesBeforeEnd[linesBeforeEnd.length - 1].length;
+        const endLine = linesBeforeEnd.length;
+        const endLineIdx = linesBeforeEnd[linesBeforeEnd.length - 1].length + 1;
 
         const str = `${value.split(NL).length}L ${value.length}C [${startLine}, ${startLineIdx}`
             + (selectionStart !== selectionEnd ? ` -> ${endLine}, ${endLineIdx}]` : ']');
@@ -252,7 +253,7 @@ const Editor = ({ className, content, language, updateContent }) => {
                     spellCheck={false}
                 />
                 <CodeDisplay className={`${BASE_CLASS_NAME}__Output`} ref={outputRef}>
-                    <code className={`language-${language}`}>{content}</code>
+                    <code className={`language-${language} line-numbers`}>{content}</code>
                     {/* Added to update height when an empty line is added at the end */}
                     <br/>
                 </CodeDisplay>

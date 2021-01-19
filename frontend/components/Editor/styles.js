@@ -19,6 +19,7 @@ export const EditorContainer = styled.div`
     display: block;
     position: relative;
     height: 100%;
+    padding: 0 2rem;
     overflow: auto;
 `;
 
@@ -29,7 +30,6 @@ const editorStyles = `
     word-spacing: normal;
     overflow-wrap: break-word;
     line-height: 1.5;
-    overflow: hidden;
     tab-size: 4;
 `;
 
@@ -37,10 +37,11 @@ export const TextArea = styled.textarea`
     z-index: 10;
     position: absolute;
     min-height: 100%;
-    width: 100%;
+    width: calc(100% - 4rem);
     padding: 1.5rem 2rem;
     resize: none;
     color: #b7c5d3;
+    overflow: hidden;
     ${editorStyles}
 
     /* Hide the textarea content */
@@ -51,7 +52,7 @@ export const TextArea = styled.textarea`
 
     &::selection {
         text-shadow: none;
-        background-color: rgba(255,255,255,0.14);
+        background-color: rgba(140,205,255,0.14);
     }
 `;
 
@@ -79,10 +80,10 @@ const displayStyles = `
 
 export const StatsDisplay = styled.div`
     ${displayStyles}
-    left: 0;
+    left: 2rem;
 `;
 
 export const LanguageDisplay = styled.div`
     ${displayStyles}
-    right: 0;
+    right: 2rem;
 `;
