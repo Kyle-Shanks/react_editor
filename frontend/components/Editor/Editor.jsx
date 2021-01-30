@@ -16,17 +16,17 @@ import {
 } from './styles.js';
 
 // TODO
-// - Should add UI elements for commands like hiding line numbers and changing language and things
 // - Add commands for quality of life
-//   - cmd+shift+K to delete line(s)
+//   - cmd+shift+k to delete line(s)
 //   - cmd+x to cut line(s)
-// - Should add styles for hiding the stats bar on the bottom (not zen mode enough bruh)
+// - Should add styles for hiding line numbers and the stats bar on the bottom (not zen mode enough)
 // - New lines don't scroll the editor bc of the handler. Need to implement scroll functionality
 // - Add an undo and redo system
-// - Can add specialized key handlers for specific languages (e.g. tag autocomplete in HTML)
 // - Need to clean up the code a bit
 //   - Move methods to a different file if possible
 //   - Add constants and things
+// - Can add specialized key handlers for specific languages (e.g. tag autocomplete in HTML)
+//   - This seems like a lot so I may skip this
 
 const NL = '\n';
 // const TAB = '\t';
