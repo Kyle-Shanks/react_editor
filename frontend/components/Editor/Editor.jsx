@@ -1,34 +1,52 @@
-import React, { useState, useLayoutEffect, useRef } from 'react';
+import React, { useState, useLayoutEffect, useRef, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import Prism from 'prismjs';
-import 'prismjs/components/prism-css-extras';
-import 'prismjs/components/prism-js-extras';
 import 'frontend/util/prism-line-numbers';
+import languageMap from './editorLanguageMap';
 import {
     ComponentContainer,
     EditorContainer,
     TextArea,
     CodeDisplay,
+    Stats,
     StatsDisplay,
     LanguageDisplay,
+    LanguageMenu,
+    LanguageOption,
 } from './styles.js';
 
 // TODO
+// - Should add UI elements for commands like hiding line numbers and changing language and things
+// - Add commands for quality of life
+//   - cmd+shift+K to delete line(s)
+//   - cmd+x to cut line(s)
+// - Should add styles for hiding the stats bar on the bottom (not zen mode enough bruh)
+// - New lines don't scroll the editor bc of the handler. Need to implement scroll functionality
 // - Add an undo and redo system
 // - Can add specialized key handlers for specific languages (e.g. tag autocomplete in HTML)
-// - Need to clean up the code a bit and add constants and things
+// - Need to clean up the code a bit
+//   - Move methods to a different file if possible
+//   - Add constants and things
 
 const NL = '\n';
-const TAB = '\t';
+// const TAB = '\t';
+const TAB = '    ';
 const BASE_CLASS_NAME = 'Editor';
-// const INITIAL_EDITOR_HEIGHT = 336; // 21rem
-const INITIAL_EDITOR_HEIGHT = 288; // 21rem - 3rem for the info display on the bottom
+const INITIAL_EDITOR_HEIGHT = 576; // 36rem
 
-const Editor = ({ className, content, language, updateContent }) => {
+const Editor = ({ className, content, language, updateContent, updateLanguage }) => {
     const [editorHeight, setEditorHeight] = useState(INITIAL_EDITOR_HEIGHT);
     const [stats, setStats] = useState('');
+    const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
     const textareaRef = useRef();
     const outputRef = useRef();
+
+    const toggleLanguageMenu = () => setIsLanguageMenuOpen(!isLanguageMenuOpen);
+
+    const handleLanguageSelect = (lang) => {
+        updateLanguage(lang);
+        setIsLanguageMenuOpen(false);
+    }
 
     const updateStats = () => {
         const { value, selectionStart, selectionEnd } = textareaRef.current;
@@ -97,12 +115,12 @@ const Editor = ({ className, content, language, updateContent }) => {
         const start = ref.selectionStart;
         const end = ref.selectionEnd;
         const lines = getLines();
+        const selectRange = getSelectionLines(start, end);
         let startShift = TAB.length;
         let endShift = 0;
 
         if (e.shiftKey) {
             startShift = 0;
-            const selectRange = getSelectionLines(start, end);
             for (let i = selectRange[0]; i < selectRange[1] + 1; i++) {
                 if (lines[i].slice(0, TAB.length) === TAB) {
                     lines[i] = lines[i].slice(TAB.length);
@@ -111,7 +129,6 @@ const Editor = ({ className, content, language, updateContent }) => {
             }
             handleContentUpdate(lines.join(NL), start + startShift, end + startShift + endShift);
         } else if (start !== end) {
-            const selectRange = getSelectionLines(start, end);
             for (let i = selectRange[0]; i < selectRange[1] + 1; i++) {
                 lines[i] = `${TAB}${lines[i]}`;
                 if (i !== selectRange[0]) endShift += TAB.length;
@@ -210,6 +227,84 @@ const Editor = ({ className, content, language, updateContent }) => {
         e.preventDefault();
     };
 
+    const handleLineDuplication = (e) => {
+        e.preventDefault();
+        const ref = e.currentTarget;
+        const start = ref.selectionStart;
+        const end = ref.selectionEnd;
+        const lines = getLines();
+        const selectRange = getSelectionLines(start, end);
+
+        const beforeContent = lines.slice(0, selectRange[1] + 1);
+        const afterContent = lines.slice(selectRange[1] + 1);
+        const lineContent = lines.slice(selectRange[0], selectRange[1] + 1);
+        const lineContentLength = lineContent.join(NL).length;
+
+        handleContentUpdate(
+            [...beforeContent, ...lineContent, ...afterContent].join(NL),
+            start + lineContentLength + 1,
+            end + lineContentLength + 1
+        );
+    };
+
+    const handleMoveLinesUp = (e) => {
+        e.preventDefault();
+        const ref = e.currentTarget;
+        const start = ref.selectionStart;
+        const end = ref.selectionEnd;
+        const lines = getLines();
+        const selectRange = getSelectionLines(start, end);
+
+        const beforeContent = lines.slice(0, selectRange[0] - 1);
+        const afterContent = lines.slice(selectRange[1] + 1);
+        const lineBefore = lines[selectRange[0] - 1];
+        const lineContent = lines.slice(selectRange[0], selectRange[1] + 1);
+
+        handleContentUpdate(
+            [...beforeContent, ...lineContent, lineBefore, ...afterContent].join(NL),
+            start - lineBefore.length - 1,
+            end - lineBefore.length - 1
+        );
+    };
+
+    const handleMoveLinesDown = (e) => {
+        e.preventDefault();
+        const ref = e.currentTarget;
+        const start = ref.selectionStart;
+        const end = ref.selectionEnd;
+        const lines = getLines();
+        const selectRange = getSelectionLines(start, end);
+
+        const beforeContent = lines.slice(0, selectRange[0]);
+        const afterContent = lines.slice(selectRange[1] + 2);
+        const lineAfter = lines[selectRange[1] + 1];
+        const lineContent = lines.slice(selectRange[0], selectRange[1] + 1);
+
+        handleContentUpdate(
+            [...beforeContent, lineAfter, ...lineContent, ...afterContent].join(NL),
+            start + lineAfter.length + 1,
+            end + lineAfter.length + 1
+        );
+    };
+
+    const handleCommands = (e) => {
+        // Meta Commands
+        if (e.metaKey) {
+            if (e.shiftKey && !e.ctrlKey && !e.altKey) {
+                switch (e.key) {
+                    case 'd': handleLineDuplication(e); break;
+                    default: return;
+                }
+            } else if (e.ctrlKey && !e.shiftKey && !e.altKey) {
+                switch (e.key) {
+                    case 'ArrowUp': handleMoveLinesUp(e); break;
+                    case 'ArrowDown': handleMoveLinesDown(e); break;
+                    default: return;
+                }
+            }
+        }
+    };
+
     const handleKeyDown = (e) => {
         const pairChars = ['(', ')', '[', ']', '{', '}', '\'', '"', '`'];
 
@@ -219,6 +314,8 @@ const Editor = ({ className, content, language, updateContent }) => {
             handleNewLine(e);
         } else if (pairChars.includes(e.key)) {
             handlePairChar(e);
+        } else {
+            handleCommands(e);
         }
 
         delayedUpdateStats();
@@ -247,6 +344,7 @@ const Editor = ({ className, content, language, updateContent }) => {
                         updateContent(e.target.value);
                         delayedUpdateStats();
                     }}
+                    onClick={() => { if (isLanguageMenuOpen) setIsLanguageMenuOpen(false); }}
                     onKeyDown={handleKeyDown}
                     onKeyUp={delayedUpdateStats}
                     onMouseUp={delayedUpdateStats}
@@ -258,8 +356,25 @@ const Editor = ({ className, content, language, updateContent }) => {
                     <br/>
                 </CodeDisplay>
             </EditorContainer>
-            <StatsDisplay>{stats}</StatsDisplay>
-            <LanguageDisplay>{language}</LanguageDisplay>
+            <Stats>
+                <StatsDisplay>{stats}</StatsDisplay>
+                <LanguageDisplay
+                    active={isLanguageMenuOpen}
+                    onClick={toggleLanguageMenu}
+                >
+                    {languageMap[language]}
+                </LanguageDisplay>
+            </Stats>
+            <LanguageMenu active={isLanguageMenuOpen}>
+                {Object.keys(languageMap).map((lang) => (
+                    <LanguageOption
+                        key={`lang_option_${lang}`}
+                        onClick={() => { handleLanguageSelect(lang); }}
+                    >
+                        {languageMap[lang]}
+                    </LanguageOption>
+                ))}
+            </LanguageMenu>
         </ComponentContainer>
     );
 };
@@ -269,6 +384,7 @@ Editor.propTypes = {
     content: PropTypes.string.isRequired,
     language: PropTypes.string.isRequired,
     updateContent: PropTypes.func.isRequired,
+    updateLanguage: PropTypes.func.isRequired,
 };
 
 Editor.defaultProps = {

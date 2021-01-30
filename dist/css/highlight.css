@@ -160,6 +160,10 @@ code[class*="language-"] *::selection {
 	font-style: italic;
 }
 
+.token.bold {
+	font-weight: 700;
+}
+
 .token.constant {
 	color: #8bd49c;
 }
