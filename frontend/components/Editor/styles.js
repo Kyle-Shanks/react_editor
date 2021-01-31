@@ -1,17 +1,11 @@
 import styled from 'styled-components';
 
 const EDITOR_BACKGROUND_COLOR = '#1c252c';
+const EDITOR_BACKGROUND_COLOR_2 = '#2b343d';
 const EDITOR_TEXT_COLOR = '#6a7a85';
 const EDITOR_TEXT_COLOR_2 = '#8a9aa5';
 const EDITOR_SELECTION_TINT = 'rgba(180,225,255,0.125)';
-const EDITOR_TINT_1 = 'rgba(205,235,255,0.08)';
-const EDITOR_TINT_2 = 'rgba(205,235,255,0.2)';
-const EDITOR_TINT_3 = 'rgba(205,235,255,0.35)';
-const EDITOR_TINT_4 = 'rgba(205,235,255,0.6)';
-const EDITOR_SHADE_1 = 'rgba(0,0,0,0.1)';
-const EDITOR_SHADE_2 = 'rgba(0,0,0,0.24)';
-const EDITOR_SHADE_3 = 'rgba(0,0,0,0.4)';
-const EDITOR_SHADE_4 = 'rgba(0,0,0,0.6)';
+const EDITOR_TINT = 'rgba(205,235,255,0.08)';
 
 export const ComponentContainer = styled.div`
     display: block;
@@ -100,11 +94,11 @@ export const StatsDisplay = styled.div`
 export const LanguageDisplay = styled.div`
     padding: 0.5rem 1rem;
     border-radius: 0.125rem;
-    background-color: ${props => props.active ? EDITOR_TINT_1 : 'transparent'};
+    background-color: ${props => props.active ? EDITOR_BACKGROUND_COLOR_2 : 'transparent'};
 
     &:hover {
         cursor: pointer;
-        background-color: ${EDITOR_TINT_1};
+        background-color: ${EDITOR_BACKGROUND_COLOR_2};
     }
 `;
 
@@ -116,7 +110,7 @@ export const LanguageMenu = styled.div`
     right: 3rem;
     bottom: 3.5rem;
     border-radius: 0.25rem;
-    background-color: ${EDITOR_TINT_1};
+    background-color: ${EDITOR_BACKGROUND_COLOR_2};
     overflow: auto;
 
     // Toggle styles
@@ -134,6 +128,6 @@ export const LanguageOption = styled.div`
 
     &:hover {
         cursor: pointer;
-        background-color: ${EDITOR_TINT_1};
+        background-color: ${EDITOR_TINT};
     }
 `;
